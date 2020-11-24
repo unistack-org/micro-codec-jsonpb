@@ -14,10 +14,26 @@ import (
 )
 
 var (
-	JsonpbMarshaler      = &jsonpb.MarshalOptions{}
-	OldJsonpbMarshaler   = &oldjsonpb.Marshaler{}
-	JsonpbUnmarshaler    = &jsonpb.UnmarshalOptions{}
-	OldJsonpbUnmarshaler = &oldjsonpb.Unmarshaler{}
+	JsonpbMarshaler = jsonpb.MarshalOptions{
+		UseEnumNumbers:  false,
+		EmitUnpopulated: false,
+		UseProtoNames:   true,
+		AllowPartial:    false,
+	}
+
+	JsonpbUnmarshaler = jsonpb.UnmarshalOptions{
+		DiscardUnknown: false,
+		AllowPartial:   false,
+	}
+
+	OldJsonpbMarshaler = oldjsonpb.Marshaler{
+		OrigName:     true,
+		EmitDefaults: false,
+	}
+
+	OldJsonpbUnmarshaler = oldjsonpb.Unmarshaler{
+		AllowUnknownFields: false,
+	}
 )
 
 type jsonpbCodec struct {
