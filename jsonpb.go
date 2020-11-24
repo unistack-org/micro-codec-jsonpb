@@ -36,9 +36,36 @@ var (
 	}
 )
 
-type jsonpbCodec struct {
+type jsonpbCodec struct{}
+
+func (c *jsonpbCodec) Marshal(v interface{}) ([]byte, error) {
+	switch m := v.(type) {
+	case *codec.Frame:
+		return m.Data, nil
+	case proto.Message:
+		return JsonpbMarshaler.Marshal(m)
+	case oldproto.Message:
+		buf, err := OldJsonpbMarshaler.MarshalToString(m)
+		return []byte(buf), err
+	}
+	return nil, codec.ErrInvalidMessage
 }
 
+func (c *jsonpbCodec) Unmarshal(d []byte, v interface{}) error {
+	if d == nil {
+		return nil
+	}
+	switch m := v.(type) {
+	case *codec.Frame:
+		m.Data = d
+		return nil
+	case proto.Message:
+		return JsonpbUnmarshaler.Unmarshal(d, m)
+	case oldproto.Message:
+		return OldJsonpbUnmarshaler.Unmarshal(bytes.NewReader(d), m)
+	}
+	return codec.ErrInvalidMessage
+}
 func (c *jsonpbCodec) ReadHeader(conn io.ReadWriter, m *codec.Message, t codec.MessageType) error {
 	return nil
 }
@@ -48,6 +75,13 @@ func (c *jsonpbCodec) ReadBody(conn io.ReadWriter, b interface{}) error {
 		return nil
 	}
 	switch m := b.(type) {
+	case *codec.Frame:
+		buf, err := ioutil.ReadAll(conn)
+		if err != nil {
+			return err
+		}
+		m.Data = buf
+		return nil
 	case oldproto.Message:
 		return OldJsonpbUnmarshaler.Unmarshal(conn, m)
 	case proto.Message:
@@ -65,6 +99,9 @@ func (c *jsonpbCodec) Write(conn io.ReadWriter, m *codec.Message, b interface{})
 		return nil
 	}
 	switch m := b.(type) {
+	case *codec.Frame:
+		_, err := conn.Write(m.Data)
+		return err
 	case oldproto.Message:
 		return OldJsonpbMarshaler.Marshal(conn, m)
 	case proto.Message:
@@ -84,28 +121,4 @@ func (c *jsonpbCodec) String() string {
 
 func NewCodec() codec.Codec {
 	return &jsonpbCodec{}
-}
-
-func (c *jsonpbCodec) Marshal(v interface{}) ([]byte, error) {
-	switch m := v.(type) {
-	case proto.Message:
-		return JsonpbMarshaler.Marshal(m)
-	case oldproto.Message:
-		buf, err := OldJsonpbMarshaler.MarshalToString(m)
-		return []byte(buf), err
-	}
-	return nil, codec.ErrInvalidMessage
-}
-
-func (c *jsonpbCodec) Unmarshal(d []byte, v interface{}) error {
-	if d == nil {
-		return nil
-	}
-	switch m := v.(type) {
-	case proto.Message:
-		return JsonpbUnmarshaler.Unmarshal(d, m)
-	case oldproto.Message:
-		return OldJsonpbUnmarshaler.Unmarshal(bytes.NewReader(d), m)
-	}
-	return codec.ErrInvalidMessage
 }
