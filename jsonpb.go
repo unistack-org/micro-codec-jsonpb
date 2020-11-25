@@ -39,6 +39,9 @@ var (
 type jsonpbCodec struct{}
 
 func (c *jsonpbCodec) Marshal(v interface{}) ([]byte, error) {
+	if v == nil {
+		return nil, nil
+	}
 	switch m := v.(type) {
 	case *codec.Frame:
 		return m.Data, nil
@@ -52,7 +55,7 @@ func (c *jsonpbCodec) Marshal(v interface{}) ([]byte, error) {
 }
 
 func (c *jsonpbCodec) Unmarshal(d []byte, v interface{}) error {
-	if d == nil {
+	if d == nil || v == nil {
 		return nil
 	}
 	switch m := v.(type) {
