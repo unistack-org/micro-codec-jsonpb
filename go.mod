@@ -1,4 +1,4 @@
-module github.com/unistack-org/micro-codec-json
+module github.com/unistack-org/micro-codec-jsonpb
 
 go 1.15
 
