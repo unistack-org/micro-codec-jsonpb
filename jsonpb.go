@@ -6,7 +6,9 @@ import (
 	"io"
 	"io/ioutil"
 
+	// nolint: staticcheck
 	oldjsonpb "github.com/golang/protobuf/jsonpb"
+	// nolint: staticcheck
 	oldproto "github.com/golang/protobuf/proto"
 	"github.com/unistack-org/micro/v3/codec"
 	jsonpb "google.golang.org/protobuf/encoding/protojson"
@@ -39,10 +41,9 @@ var (
 type jsonpbCodec struct{}
 
 func (c *jsonpbCodec) Marshal(v interface{}) ([]byte, error) {
-	if v == nil {
-		return nil, nil
-	}
 	switch m := v.(type) {
+	case nil:
+		return nil, nil
 	case *codec.Frame:
 		return m.Data, nil
 	case proto.Message:
@@ -55,10 +56,12 @@ func (c *jsonpbCodec) Marshal(v interface{}) ([]byte, error) {
 }
 
 func (c *jsonpbCodec) Unmarshal(d []byte, v interface{}) error {
-	if d == nil || v == nil {
+	if d == nil {
 		return nil
 	}
 	switch m := v.(type) {
+	case nil:
+		return nil
 	case *codec.Frame:
 		m.Data = d
 		return nil
@@ -74,10 +77,9 @@ func (c *jsonpbCodec) ReadHeader(conn io.ReadWriter, m *codec.Message, t codec.M
 }
 
 func (c *jsonpbCodec) ReadBody(conn io.ReadWriter, b interface{}) error {
-	if b == nil {
-		return nil
-	}
 	switch m := b.(type) {
+	case nil:
+		return nil
 	case *codec.Frame:
 		buf, err := ioutil.ReadAll(conn)
 		if err != nil {
@@ -98,10 +100,9 @@ func (c *jsonpbCodec) ReadBody(conn io.ReadWriter, b interface{}) error {
 }
 
 func (c *jsonpbCodec) Write(conn io.ReadWriter, m *codec.Message, b interface{}) error {
-	if b == nil {
-		return nil
-	}
 	switch m := b.(type) {
+	case nil:
+		return nil
 	case *codec.Frame:
 		_, err := conn.Write(m.Data)
 		return err
