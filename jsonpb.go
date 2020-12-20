@@ -72,11 +72,11 @@ func (c *jsonpbCodec) Unmarshal(d []byte, v interface{}) error {
 	}
 	return codec.ErrInvalidMessage
 }
-func (c *jsonpbCodec) ReadHeader(conn io.ReadWriter, m *codec.Message, t codec.MessageType) error {
+func (c *jsonpbCodec) ReadHeader(conn io.Reader, m *codec.Message, t codec.MessageType) error {
 	return nil
 }
 
-func (c *jsonpbCodec) ReadBody(conn io.ReadWriter, b interface{}) error {
+func (c *jsonpbCodec) ReadBody(conn io.Reader, b interface{}) error {
 	switch m := b.(type) {
 	case nil:
 		return nil
@@ -99,7 +99,7 @@ func (c *jsonpbCodec) ReadBody(conn io.ReadWriter, b interface{}) error {
 	return codec.ErrInvalidMessage
 }
 
-func (c *jsonpbCodec) Write(conn io.ReadWriter, m *codec.Message, b interface{}) error {
+func (c *jsonpbCodec) Write(conn io.Writer, m *codec.Message, b interface{}) error {
 	switch m := b.(type) {
 	case nil:
 		return nil
