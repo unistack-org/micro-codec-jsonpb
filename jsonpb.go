@@ -2,14 +2,9 @@
 package jsonpb
 
 import (
-	"bytes"
 	"io"
 	"io/ioutil"
 
-	// nolint: staticcheck
-	oldjsonpb "github.com/golang/protobuf/jsonpb"
-	// nolint: staticcheck
-	oldproto "github.com/golang/protobuf/proto"
 	"github.com/unistack-org/micro/v3/codec"
 	jsonpb "google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
@@ -27,15 +22,6 @@ var (
 		DiscardUnknown: false,
 		AllowPartial:   false,
 	}
-
-	OldJsonpbMarshaler = oldjsonpb.Marshaler{
-		OrigName:     true,
-		EmitDefaults: false,
-	}
-
-	OldJsonpbUnmarshaler = oldjsonpb.Unmarshaler{
-		AllowUnknownFields: false,
-	}
 )
 
 type jsonpbCodec struct{}
@@ -48,9 +34,6 @@ func (c *jsonpbCodec) Marshal(v interface{}) ([]byte, error) {
 		return m.Data, nil
 	case proto.Message:
 		return JsonpbMarshaler.Marshal(m)
-	case oldproto.Message:
-		buf, err := OldJsonpbMarshaler.MarshalToString(m)
-		return []byte(buf), err
 	}
 	return nil, codec.ErrInvalidMessage
 }
@@ -67,8 +50,6 @@ func (c *jsonpbCodec) Unmarshal(d []byte, v interface{}) error {
 		return nil
 	case proto.Message:
 		return JsonpbUnmarshaler.Unmarshal(d, m)
-	case oldproto.Message:
-		return OldJsonpbUnmarshaler.Unmarshal(bytes.NewReader(d), m)
 	}
 	return codec.ErrInvalidMessage
 }
@@ -87,8 +68,6 @@ func (c *jsonpbCodec) ReadBody(conn io.Reader, b interface{}) error {
 		}
 		m.Data = buf
 		return nil
-	case oldproto.Message:
-		return OldJsonpbUnmarshaler.Unmarshal(conn, m)
 	case proto.Message:
 		buf, err := ioutil.ReadAll(conn)
 		if err != nil {
@@ -106,8 +85,6 @@ func (c *jsonpbCodec) Write(conn io.Writer, m *codec.Message, b interface{}) err
 	case *codec.Frame:
 		_, err := conn.Write(m.Data)
 		return err
-	case oldproto.Message:
-		return OldJsonpbMarshaler.Marshal(conn, m)
 	case proto.Message:
 		buf, err := JsonpbMarshaler.Marshal(m)
 		if err != nil {
