@@ -73,59 +73,31 @@ func (c *jsonpbCodec) ReadHeader(conn io.Reader, m *codec.Message, t codec.Messa
 }
 
 func (c *jsonpbCodec) ReadBody(conn io.Reader, v interface{}) error {
-	switch m := v.(type) {
-	case nil:
+	if v == nil {
 		return nil
-	case *codec.Frame:
-		buf, err := io.ReadAll(conn)
-		if err != nil {
-			return err
-		} else if len(buf) == 0 {
-			return nil
-		}
-		m.Data = buf
-		return nil
-	case proto.Message:
-		buf, err := io.ReadAll(conn)
-		if err != nil {
-			return err
-		} else if len(buf) == 0 {
-			return nil
-		}
-		if nv, nerr := rutil.StructFieldByTag(m, codec.DefaultTagName, flattenTag); nerr == nil {
-			if nm, ok := nv.(proto.Message); ok {
-				m = nm
-			}
-		}
-		return JsonpbUnmarshaler.Unmarshal(buf, m)
 	}
-	return codec.ErrInvalidMessage
+	buf, err := io.ReadAll(conn)
+	if err != nil {
+		return err
+	} else if len(buf) == 0 {
+		return nil
+	}
+	return c.Unmarshal(buf, v)
 }
 
 func (c *jsonpbCodec) Write(conn io.Writer, m *codec.Message, v interface{}) error {
-	switch m := v.(type) {
-	case nil:
+	if v == nil {
 		return nil
-	case *codec.Frame:
-		_, err := conn.Write(m.Data)
-		return err
-	case proto.Message:
-		if nv, nerr := rutil.StructFieldByTag(m, codec.DefaultTagName, flattenTag); nerr == nil {
-			if nm, ok := nv.(proto.Message); ok {
-				m = nm
-			}
-		}
-
-		buf, err := JsonpbMarshaler.Marshal(m)
-		if err != nil {
-			return err
-		} else if len(buf) == 0 {
-			return codec.ErrInvalidMessage
-		}
-		_, err = conn.Write(buf)
-		return err
 	}
-	return codec.ErrInvalidMessage
+
+	buf, err := c.Marshal(v)
+	if err != nil {
+		return err
+	} else if len(buf) == 0 {
+		return codec.ErrInvalidMessage
+	}
+	_, err = conn.Write(buf)
+	return err
 }
 
 func (c *jsonpbCodec) String() string {
