@@ -39,7 +39,7 @@ func (c *jsonpbCodec) Marshal(v interface{}) ([]byte, error) {
 	case proto.Message:
 		if nv, nerr := rutil.StructFieldByTag(m, codec.DefaultTagName, flattenTag); nerr == nil {
 			if nm, ok := nv.(proto.Message); ok {
-				return JsonpbMarshaler.Marshal(nm)
+				m = nm
 			}
 		}
 		return JsonpbMarshaler.Marshal(m)
@@ -60,13 +60,14 @@ func (c *jsonpbCodec) Unmarshal(d []byte, v interface{}) error {
 	case proto.Message:
 		if nv, nerr := rutil.StructFieldByTag(m, codec.DefaultTagName, flattenTag); nerr == nil {
 			if nm, ok := nv.(proto.Message); ok {
-				return JsonpbUnmarshaler.Unmarshal(d, nm)
+				m = nm
 			}
 		}
 		return JsonpbUnmarshaler.Unmarshal(d, m)
 	}
 	return codec.ErrInvalidMessage
 }
+
 func (c *jsonpbCodec) ReadHeader(conn io.Reader, m *codec.Message, t codec.MessageType) error {
 	return nil
 }
@@ -93,7 +94,7 @@ func (c *jsonpbCodec) ReadBody(conn io.Reader, v interface{}) error {
 		}
 		if nv, nerr := rutil.StructFieldByTag(m, codec.DefaultTagName, flattenTag); nerr == nil {
 			if nm, ok := nv.(proto.Message); ok {
-				return JsonpbUnmarshaler.Unmarshal(buf, nm)
+				m = nm
 			}
 		}
 		return JsonpbUnmarshaler.Unmarshal(buf, m)
@@ -109,15 +110,13 @@ func (c *jsonpbCodec) Write(conn io.Writer, m *codec.Message, v interface{}) err
 		_, err := conn.Write(m.Data)
 		return err
 	case proto.Message:
-		var buf []byte
-		var err error
 		if nv, nerr := rutil.StructFieldByTag(m, codec.DefaultTagName, flattenTag); nerr == nil {
 			if nm, ok := nv.(proto.Message); ok {
-				buf, err = JsonpbMarshaler.Marshal(nm)
+				m = nm
 			}
-		} else {
-			buf, err = JsonpbMarshaler.Marshal(m)
 		}
+
+		buf, err := JsonpbMarshaler.Marshal(m)
 		if err != nil {
 			return err
 		} else if len(buf) == 0 {
