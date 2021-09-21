@@ -11,26 +11,28 @@ import (
 )
 
 var (
-	JsonpbMarshaler = jsonpb.MarshalOptions{
+	DefaultMarshalOptions = jsonpb.MarshalOptions{
 		UseEnumNumbers:  false,
 		EmitUnpopulated: false,
 		UseProtoNames:   true,
 		AllowPartial:    false,
 	}
 
-	JsonpbUnmarshaler = jsonpb.UnmarshalOptions{
+	DefaultUnmarshalOptions = jsonpb.UnmarshalOptions{
 		DiscardUnknown: false,
 		AllowPartial:   false,
 	}
 )
 
-type jsonpbCodec struct{}
+type jsonpbCodec struct {
+	opts codec.Options
+}
 
 const (
 	flattenTag = "flatten"
 )
 
-func (c *jsonpbCodec) Marshal(v interface{}) ([]byte, error) {
+func (c *jsonpbCodec) Marshal(v interface{}, opts ...codec.Option) ([]byte, error) {
 	switch m := v.(type) {
 	case nil:
 		return nil, nil
@@ -42,12 +44,24 @@ func (c *jsonpbCodec) Marshal(v interface{}) ([]byte, error) {
 				m = nm
 			}
 		}
-		return JsonpbMarshaler.Marshal(m)
+		options := c.opts
+		for _, o := range opts {
+			o(&options)
+		}
+
+		marshalOptions := DefaultMarshalOptions
+		if options.Context != nil {
+			if f, ok := options.Context.Value(marshalOptionsKey{}).(jsonpb.MarshalOptions); ok {
+				marshalOptions = f
+			}
+		}
+
+		return marshalOptions.Marshal(m)
 	}
 	return nil, codec.ErrInvalidMessage
 }
 
-func (c *jsonpbCodec) Unmarshal(d []byte, v interface{}) error {
+func (c *jsonpbCodec) Unmarshal(d []byte, v interface{}, opts ...codec.Option) error {
 	if len(d) == 0 {
 		return nil
 	}
@@ -63,7 +77,19 @@ func (c *jsonpbCodec) Unmarshal(d []byte, v interface{}) error {
 				m = nm
 			}
 		}
-		return JsonpbUnmarshaler.Unmarshal(d, m)
+
+		options := c.opts
+		for _, o := range opts {
+			o(&options)
+		}
+
+		unmarshalOptions := DefaultUnmarshalOptions
+		if options.Context != nil {
+			if f, ok := options.Context.Value(unmarshalOptionsKey{}).(jsonpb.UnmarshalOptions); ok {
+				unmarshalOptions = f
+			}
+		}
+		return unmarshalOptions.Unmarshal(d, m)
 	}
 	return codec.ErrInvalidMessage
 }
@@ -104,6 +130,6 @@ func (c *jsonpbCodec) String() string {
 	return "jsonpb"
 }
 
-func NewCodec() codec.Codec {
-	return &jsonpbCodec{}
+func NewCodec(opts ...codec.Option) codec.Codec {
+	return &jsonpbCodec{opts: codec.NewOptions(opts...)}
 }
