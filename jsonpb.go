@@ -39,14 +39,15 @@ func (c *jsonpbCodec) Marshal(v interface{}, opts ...codec.Option) ([]byte, erro
 	case *codec.Frame:
 		return m.Data, nil
 	case proto.Message:
-		if nv, nerr := rutil.StructFieldByTag(m, codec.DefaultTagName, flattenTag); nerr == nil {
-			if nm, ok := nv.(proto.Message); ok {
-				m = nm
-			}
-		}
 		options := c.opts
 		for _, o := range opts {
 			o(&options)
+		}
+
+		if nv, nerr := rutil.StructFieldByTag(m, options.TagName, flattenTag); nerr == nil {
+			if nm, ok := nv.(proto.Message); ok {
+				m = nm
+			}
 		}
 
 		marshalOptions := DefaultMarshalOptions
@@ -72,15 +73,15 @@ func (c *jsonpbCodec) Unmarshal(d []byte, v interface{}, opts ...codec.Option) e
 		m.Data = d
 		return nil
 	case proto.Message:
-		if nv, nerr := rutil.StructFieldByTag(m, codec.DefaultTagName, flattenTag); nerr == nil {
-			if nm, ok := nv.(proto.Message); ok {
-				m = nm
-			}
-		}
-
 		options := c.opts
 		for _, o := range opts {
 			o(&options)
+		}
+
+		if nv, nerr := rutil.StructFieldByTag(m, options.TagName, flattenTag); nerr == nil {
+			if nm, ok := nv.(proto.Message); ok {
+				m = nm
+			}
 		}
 
 		unmarshalOptions := DefaultUnmarshalOptions
