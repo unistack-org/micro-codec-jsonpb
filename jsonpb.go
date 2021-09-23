@@ -33,66 +33,68 @@ const (
 )
 
 func (c *jsonpbCodec) Marshal(v interface{}, opts ...codec.Option) ([]byte, error) {
-	switch m := v.(type) {
-	case nil:
+	if v == nil {
 		return nil, nil
-	case *codec.Frame:
-		return m.Data, nil
-	case proto.Message:
-		options := c.opts
-		for _, o := range opts {
-			o(&options)
-		}
-
-		if nv, nerr := rutil.StructFieldByTag(m, options.TagName, flattenTag); nerr == nil {
-			if nm, ok := nv.(proto.Message); ok {
-				m = nm
-			}
-		}
-
-		marshalOptions := DefaultMarshalOptions
-		if options.Context != nil {
-			if f, ok := options.Context.Value(marshalOptionsKey{}).(jsonpb.MarshalOptions); ok {
-				marshalOptions = f
-			}
-		}
-
-		return marshalOptions.Marshal(m)
 	}
-	return nil, codec.ErrInvalidMessage
+
+	options := c.opts
+	for _, o := range opts {
+		o(&options)
+	}
+
+	if nv, nerr := rutil.StructFieldByTag(v, options.TagName, flattenTag); nerr == nil {
+		v = nv
+	}
+
+	if m, ok := v.(*codec.Frame); ok {
+		return m.Data, nil
+	}
+
+	if _, ok := v.(proto.Message); !ok {
+		return nil, codec.ErrInvalidMessage
+	}
+
+	marshalOptions := DefaultMarshalOptions
+	if options.Context != nil {
+		if f, ok := options.Context.Value(marshalOptionsKey{}).(jsonpb.MarshalOptions); ok {
+			marshalOptions = f
+		}
+	}
+
+	return marshalOptions.Marshal(v.(proto.Message))
 }
 
 func (c *jsonpbCodec) Unmarshal(d []byte, v interface{}, opts ...codec.Option) error {
-	if len(d) == 0 {
+	if v == nil || len(d) == 0 {
 		return nil
 	}
-	switch m := v.(type) {
-	case nil:
-		return nil
-	case *codec.Frame:
+
+	options := c.opts
+	for _, o := range opts {
+		o(&options)
+	}
+
+	if nv, nerr := rutil.StructFieldByTag(v, options.TagName, flattenTag); nerr == nil {
+		v = nv
+	}
+
+	if m, ok := v.(*codec.Frame); ok {
 		m.Data = d
 		return nil
-	case proto.Message:
-		options := c.opts
-		for _, o := range opts {
-			o(&options)
-		}
-
-		if nv, nerr := rutil.StructFieldByTag(m, options.TagName, flattenTag); nerr == nil {
-			if nm, ok := nv.(proto.Message); ok {
-				m = nm
-			}
-		}
-
-		unmarshalOptions := DefaultUnmarshalOptions
-		if options.Context != nil {
-			if f, ok := options.Context.Value(unmarshalOptionsKey{}).(jsonpb.UnmarshalOptions); ok {
-				unmarshalOptions = f
-			}
-		}
-		return unmarshalOptions.Unmarshal(d, m)
 	}
-	return codec.ErrInvalidMessage
+
+	if _, ok := v.(proto.Message); !ok {
+		return codec.ErrInvalidMessage
+	}
+
+	unmarshalOptions := DefaultUnmarshalOptions
+	if options.Context != nil {
+		if f, ok := options.Context.Value(unmarshalOptionsKey{}).(jsonpb.UnmarshalOptions); ok {
+			unmarshalOptions = f
+		}
+	}
+
+	return unmarshalOptions.Unmarshal(d, v.(proto.Message))
 }
 
 func (c *jsonpbCodec) ReadHeader(conn io.Reader, m *codec.Message, t codec.MessageType) error {
