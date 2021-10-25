@@ -1,5 +1,5 @@
 // Package jsonpb provides a json codec
-package jsonpb
+package jsonpb // import "go.unistack.org/micro-codec-jsonpb/v3"
 
 import (
 	"io"
