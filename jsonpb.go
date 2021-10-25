@@ -4,8 +4,8 @@ package jsonpb
 import (
 	"io"
 
-	"github.com/unistack-org/micro/v3/codec"
-	rutil "github.com/unistack-org/micro/v3/util/reflect"
+	"go.unistack.org/micro/v3/codec"
+	rutil "go.unistack.org/micro/v3/util/reflect"
 	jsonpb "google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 )
