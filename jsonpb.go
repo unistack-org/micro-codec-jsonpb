@@ -4,6 +4,7 @@ package jsonpb // import "go.unistack.org/micro-codec-jsonpb/v3"
 import (
 	"io"
 
+	pb "go.unistack.org/micro-proto/v3/codec"
 	"go.unistack.org/micro/v3/codec"
 	rutil "go.unistack.org/micro/v3/util/reflect"
 	jsonpb "google.golang.org/protobuf/encoding/protojson"
@@ -46,7 +47,10 @@ func (c *jsonpbCodec) Marshal(v interface{}, opts ...codec.Option) ([]byte, erro
 		v = nv
 	}
 
-	if m, ok := v.(*codec.Frame); ok {
+	switch m := v.(type) {
+	case *codec.Frame:
+		return m.Data, nil
+	case *pb.Frame:
 		return m.Data, nil
 	}
 
@@ -78,7 +82,11 @@ func (c *jsonpbCodec) Unmarshal(d []byte, v interface{}, opts ...codec.Option) e
 		v = nv
 	}
 
-	if m, ok := v.(*codec.Frame); ok {
+	switch m := v.(type) {
+	case *codec.Frame:
+		m.Data = d
+		return nil
+	case *pb.Frame:
 		m.Data = d
 		return nil
 	}
