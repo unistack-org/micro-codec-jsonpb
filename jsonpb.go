@@ -1,12 +1,12 @@
 // Package jsonpb provides a json codec
-package jsonpb // import "go.unistack.org/micro-codec-jsonpb/v3"
+package jsonpb // import "go.unistack.org/micro-codec-jsonpb/v4"
 
 import (
 	"io"
 
-	pb "go.unistack.org/micro-proto/v3/codec"
-	"go.unistack.org/micro/v3/codec"
-	rutil "go.unistack.org/micro/v3/util/reflect"
+	pb "go.unistack.org/micro-proto/v4/codec"
+	"go.unistack.org/micro/v4/codec"
+	rutil "go.unistack.org/micro/v4/util/reflect"
 	jsonpb "google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 )

@@ -1,7 +1,7 @@
 package jsonpb
 
 import (
-	codec "go.unistack.org/micro/v3/codec"
+	codec "go.unistack.org/micro/v4/codec"
 	jsonpb "google.golang.org/protobuf/encoding/protojson"
 )
 
