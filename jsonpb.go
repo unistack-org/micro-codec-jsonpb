@@ -15,7 +15,7 @@ var (
 	DefaultMarshalOptions = jsonpb.MarshalOptions{
 		UseEnumNumbers:  false,
 		EmitUnpopulated: false,
-		UseProtoNames:   true,
+		UseProtoNames:   false,
 		AllowPartial:    false,
 	}
 
