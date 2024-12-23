@@ -153,6 +153,10 @@ func (c *jsonpbCodecV2) Marshal(d []byte, v interface{}, opts ...codec.Option) (
 			}
 		}
 		return marshalOptions.MarshalAppend(d[:0], m)
+	case codec.RawMessage:
+		return []byte(m), nil
+	case *codec.RawMessage:
+		return []byte(*m), nil
 	default:
 		return nil, codec.ErrInvalidMessage
 	}
