@@ -189,6 +189,12 @@ func (c *jsonpbCodecV2) Unmarshal(d []byte, v interface{}, opts ...codec.Option)
 			}
 		}
 		return unmarshalOptions.Unmarshal(d, m)
+	case *codec.RawMessage:
+		*m = append((*m)[0:0], d...)
+		return nil
+	case codec.RawMessage:
+		copy(m, d)
+		return nil
 	default:
 		return codec.ErrInvalidMessage
 	}
