@@ -65,6 +65,10 @@ func (c *jsonpbCodec) Marshal(v interface{}, opts ...codec.Option) ([]byte, erro
 			}
 		}
 		return marshalOptions.Marshal(m)
+	case codec.RawMessage:
+		return []byte(m), nil
+	case *codec.RawMessage:
+		return []byte(*m), nil
 	default:
 		return nil, codec.ErrInvalidMessage
 	}
@@ -101,6 +105,12 @@ func (c *jsonpbCodec) Unmarshal(d []byte, v interface{}, opts ...codec.Option) e
 			}
 		}
 		return unmarshalOptions.Unmarshal(d, m)
+	case *codec.RawMessage:
+		*m = append((*m)[0:0], d...)
+		return nil
+	case codec.RawMessage:
+		copy(m, d)
+		return nil
 	default:
 		return codec.ErrInvalidMessage
 	}
